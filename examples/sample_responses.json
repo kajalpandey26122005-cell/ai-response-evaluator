@@ -1,0 +1,28 @@
+{
+    "binary_search": {
+        "question": "What is binary search?",
+        "responses": [
+            {
+                "id": "A",
+                "text": "Binary search searches a sorted array in O(n) time."
+            },
+            {
+                "id": "B",
+                "text": "Binary search searches a sorted array by repeatedly dividing the search space in half. Its time complexity is O(log n)."
+            }
+        ]
+    },
+    "python": {
+        "question": "What is Python?",
+        "responses": [
+            {
+                "id": "A",
+                "text": "Python is a programming language known for its simple syntax and wide range of applications."
+            },
+            {
+                "id": "B",
+                "text": "Python is a database used to store information."
+            }
+        ]
+    }
+}

@@ -1,3 +1,6 @@
+from src.hallucination import hallucination_risk
+
+
 def evaluate_correctness(question, response):
     """
     Evaluate the correctness of an AI response.
@@ -9,7 +12,7 @@ def evaluate_correctness(question, response):
     question_lower = question.lower()
     response_lower = response.lower()
 
-    # Simple example rule for binary search
+    # Binary search rule
     if "binary search" in question_lower:
         if "o(log n)" in response_lower:
             return 10
@@ -18,13 +21,27 @@ def evaluate_correctness(question, response):
         else:
             return 5
 
-    # Default score when we don't have a specific rule
+    # Python rule
+    if "python" in question_lower:
+        if "programming language" in response_lower:
+            return 10
+        elif "database" in response_lower:
+            return 3
+        else:
+            return 5
+
+    # Default prototype score
+    if not response.strip():
+        return 0
+
     return 5
 
 
 def evaluate_relevance(question, response):
     """
-    Check whether the response is related to the question.
+    Estimate whether the response is related to the question.
+
+    This is a simple keyword-overlap prototype.
     """
 
     question_words = set(question.lower().split())
@@ -32,7 +49,9 @@ def evaluate_relevance(question, response):
 
     common_words = question_words.intersection(response_words)
 
-    if len(common_words) >= 2:
+    if len(common_words) >= 3:
+        return 10
+    elif len(common_words) >= 2:
         return 8
     elif len(common_words) == 1:
         return 6
@@ -44,7 +63,7 @@ def evaluate_completeness(question, response):
     """
     Estimate completeness based on response length.
 
-    This is only a simple prototype.
+    This is only a prototype.
     """
 
     word_count = len(response.split())
@@ -61,12 +80,14 @@ def evaluate_completeness(question, response):
 
 def evaluate_clarity(response):
     """
-    Estimate clarity using simple sentence/length rules.
+    Estimate clarity using simple response-length rules.
     """
 
     word_count = len(response.split())
 
-    if word_count <= 50:
+    if word_count == 0:
+        return 0
+    elif word_count <= 50:
         return 8
     elif word_count <= 100:
         return 6
@@ -76,28 +97,29 @@ def evaluate_clarity(response):
 
 def calculate_overall_score(scores):
     """
-    Calculate the average score across all evaluation criteria.
+    Calculate the average score of all evaluation criteria.
     """
 
-    total = (
-        scores["correctness"]
-        + scores["relevance"]
-        + scores["completeness"]
-        + scores["clarity"]
-    )
+    criteria = [
+        "correctness",
+        "relevance",
+        "completeness",
+        "clarity"
+    ]
 
-    return round(total / 4, 2)
+    total = sum(scores[criterion] for criterion in criteria)
+
+    return round(total / len(criteria), 2)
 
 
 def generate_feedback(scores):
     """
-    Generate simple feedback based on evaluation scores.
-
-    This is rule-based feedback, not an LLM-generated explanation.
+    Generate feedback based on the evaluation scores.
     """
 
     feedback = []
 
+    # Correctness
     if scores["correctness"] < 5:
         feedback.append(
             "The response may contain a factual or technical error."
@@ -111,6 +133,7 @@ def generate_feedback(scores):
             "The response appears technically correct."
         )
 
+    # Relevance
     if scores["relevance"] < 5:
         feedback.append(
             "The response is not sufficiently related to the question."
@@ -124,6 +147,7 @@ def generate_feedback(scores):
             "The response is relevant to the question."
         )
 
+    # Completeness
     if scores["completeness"] < 5:
         feedback.append(
             "The response is too short and misses important information."
@@ -137,6 +161,7 @@ def generate_feedback(scores):
             "The response provides a reasonably complete explanation."
         )
 
+    # Clarity
     if scores["clarity"] < 5:
         feedback.append(
             "The response could be clearer and easier to understand."
@@ -151,29 +176,62 @@ def generate_feedback(scores):
 
 def evaluate_response(question, response):
     """
-    Evaluate an AI-generated response using all criteria.
+    Evaluate an AI-generated response on all criteria.
     """
 
-    correctness = evaluate_correctness(question, response)
-    relevance = evaluate_relevance(question, response)
-    completeness = evaluate_completeness(question, response)
-    clarity = evaluate_clarity(response)
+    # Input validation
+    if not isinstance(question, str):
+        raise TypeError("Question must be a string.")
 
-    overall = (
-        correctness
-        + relevance
-        + completeness
-        + clarity
-    ) / 4
+    if not isinstance(response, str):
+        raise TypeError("Response must be a string.")
 
+    if not question.strip():
+        raise ValueError("Question cannot be empty.")
+
+    if not response.strip():
+        raise ValueError("Response cannot be empty.")
+
+    # Evaluate each criterion
     scores = {
-        "correctness": correctness,
-        "relevance": relevance,
-        "completeness": completeness,
-        "clarity": clarity,
-        "overall": round(overall, 2)
+        "correctness": evaluate_correctness(question, response),
+        "relevance": evaluate_relevance(question, response),
+        "completeness": evaluate_completeness(question, response),
+        "clarity": evaluate_clarity(response)
     }
 
+    # Overall score
+    scores["overall"] = calculate_overall_score(scores)
+
+    # Hallucination risk
+    scores["hallucination_risk"] = hallucination_risk(
+        question,
+        response
+    )
+
+    # Feedback
     scores["feedback"] = generate_feedback(scores)
 
     return scores
+
+
+def compare_responses(question, response_a, response_b):
+    """
+    Evaluate two AI responses and determine which one is better.
+    """
+
+    result_a = evaluate_response(question, response_a)
+    result_b = evaluate_response(question, response_b)
+
+    if result_a["overall"] > result_b["overall"]:
+        winner = "Response A"
+    elif result_b["overall"] > result_a["overall"]:
+        winner = "Response B"
+    else:
+        winner = "Tie"
+
+    return {
+        "response_a": result_a,
+        "response_b": result_b,
+        "winner": winner
+    }
