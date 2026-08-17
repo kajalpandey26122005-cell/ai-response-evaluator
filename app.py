@@ -18,6 +18,7 @@ def main():
     print(f"Relevance:      {result['relevance']}/10")
     print(f"Completeness:   {result['completeness']}/10")
     print(f"Clarity:        {result['clarity']}/10")
+    print(f"Overall Score:  {result['overall']}/10")
 
     print("\n========== FEEDBACK ==========")
 

@@ -159,14 +159,21 @@ def evaluate_response(question, response):
     completeness = evaluate_completeness(question, response)
     clarity = evaluate_clarity(response)
 
+    overall = (
+        correctness
+        + relevance
+        + completeness
+        + clarity
+    ) / 4
+
     scores = {
         "correctness": correctness,
         "relevance": relevance,
         "completeness": completeness,
-        "clarity": clarity
+        "clarity": clarity,
+        "overall": round(overall, 2)
     }
 
-    scores["overall"] = calculate_overall_score(scores)
     scores["feedback"] = generate_feedback(scores)
 
     return scores

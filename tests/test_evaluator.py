@@ -27,3 +27,29 @@ def test_incorrect_binary_search_complexity():
     result = evaluate_response(question, response)
 
     assert result["correctness"] == 3
+def test_binary_search_correct_answer():
+    result = evaluate_response(
+        "What is binary search?",
+        "Binary search works on a sorted array and has O(log n) time complexity."
+    )
+
+    assert result["correctness"] == 10
+
+
+def test_binary_search_wrong_answer():
+    result = evaluate_response(
+        "What is binary search?",
+        "Binary search works on a sorted array and has O(n) time complexity."
+    )
+
+    assert result["correctness"] == 3
+
+
+def test_overall_score_exists():
+    result = evaluate_response(
+        "What is binary search?",
+        "Binary search works on a sorted array and has O(log n) time complexity."
+    )
+
+    assert "overall" in result
+    assert 0 <= result["overall"] <= 10
